@@ -64,7 +64,7 @@ jobs:
           export PATH=$HOME/sonar-scanner-cli/bin:$PATH
           sonar-scanner -v
 
-      # 8. SonarQube analysis using standalone CLI (Fixed)
+      # 8. SonarQube analysis with Debug (-X) flag
       - name: SonarQube Analysis
         env:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST }}
@@ -75,11 +75,17 @@ jobs:
             echo "Error: SONAR_HOST secret is missing or empty!"
             exit 1
           fi
+          
+          # Ensure URL has http:// or https:// scheme
+          if [[ ! "$SONAR_HOST_URL" =~ ^http:// ]] && [[ ! "$SONAR_HOST_URL" =~ ^https:// ]]; then
+            SONAR_HOST_URL="http://$SONAR_HOST_URL"
+          fi
+
           curl -I "$SONAR_HOST_URL"
           
-          # Using standalone CLI scanner instead of Maven plugin
           export PATH=$HOME/sonar-scanner-cli/bin:$PATH
           sonar-scanner \
+            -X \
             -Dsonar.projectKey=hotstar \
             -Dsonar.sources=src \
             -Dsonar.host.url="$SONAR_HOST_URL" \
