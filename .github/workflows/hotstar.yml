@@ -64,8 +64,9 @@ jobs:
           export PATH=$HOME/sonar-scanner-cli/bin:$PATH
           sonar-scanner -v
 
-      # 8. SonarQube analysis with Debug (-X) flag
+      # 8. SonarQube analysis with explicit bash shell
       - name: SonarQube Analysis
+        shell: bash
         env:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -85,7 +86,6 @@ jobs:
           
           export PATH=$HOME/sonar-scanner-cli/bin:$PATH
           sonar-scanner \
-            -X \
             -Dsonar.projectKey=hotstar \
             -Dsonar.sources=src \
             -Dsonar.host.url="$SONAR_HOST_URL" \
