@@ -1,3 +1,4 @@
+
 name: Java CI/CD Pipeline to Tomcat
 
 on:
@@ -64,7 +65,7 @@ jobs:
           export PATH=$HOME/sonar-scanner-cli/bin:$PATH
           sonar-scanner -v
 
-      # 8. SonarQube analysis (Fixed)
+      # 8. SonarQube analysis (Fixed with full plugin name)
       - name: SonarQube Analysis
         env:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST }}
@@ -76,7 +77,7 @@ jobs:
             exit 1
           fi
           curl -I "$SONAR_HOST_URL"
-          mvn sonar:sonar \
+          mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
             -Dsonar.projectKey=hotstar \
             -Dsonar.host.url="$SONAR_HOST_URL" \
             -Dsonar.token="$SONAR_TOKEN"
