@@ -1,4 +1,4 @@
-name: Java CI/CD Pipeline to Tomcat
+Name: Java CI/CD Pipeline to Tomcat
 
 on:
   push:
@@ -30,6 +30,7 @@ jobs:
             echo "Maven is already installed"
           fi
           mvn -version
+
       # 4. Cache Maven dependencies
       - name: Cache Maven packages
         uses: actions/cache@v4
@@ -50,7 +51,8 @@ jobs:
         with:
           name: myapp
           path: target/*.war
-      # 6. Install SonarQube Scanner CLI
+
+      # 7. Install SonarQube Scanner CLI
       - name: Install SonarQube Scanner CLI
         run: |
           if [ ! -d "$HOME/sonar-scanner-cli" ]; then
@@ -61,18 +63,23 @@ jobs:
           fi
           export PATH=$HOME/sonar-scanner-cli/bin:$PATH
           sonar-scanner -v
-      # 7. SonarQube analysis
+
+      # 8. SonarQube analysis (Fixed)
       - name: SonarQube Analysis
         env:
-          SONAR_HOST: ${{ secrets.SONAR_HOST }}
-          SONAR_LOGIN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          echo "SonarQube server URL: $SONAR_HOST"
-          curl -I $SONAR_HOST
+          echo "SonarQube server URL: $SONAR_HOST_URL"
+          if [ -z "$SONAR_HOST_URL" ]; then
+            echo "Error: SONAR_HOST secret is missing or empty!"
+            exit 1
+          fi
+          curl -I "$SONAR_HOST_URL"
           mvn sonar:sonar \
             -Dsonar.projectKey=hotstar \
-            -Dsonar.host.url=$SONAR_HOST \
-            -Dsonar.login=$SONAR_LOGIN
+            -Dsonar.host.url="$SONAR_HOST_URL" \
+            -Dsonar.token="$SONAR_TOKEN"
 
   deploy:
     runs-on: ubuntu-latest
@@ -80,20 +87,21 @@ jobs:
     environment: production
 
     steps:
-      # 7. Download WAR artifact
+      # 9. Download WAR artifact
       - name: Download WAR artifact
         uses: actions/download-artifact@v4
         with:
           name: myapp
 
-      # 8. Deploy WAR via Tomcat Manager
+      # 10. Deploy WAR via Tomcat Manager
       - name: Deploy to Tomcat
         run: |
           WAR_FILE=$(ls *.war)
           echo "Deploying $WAR_FILE to Tomcat..."
           curl -v --upload-file "$WAR_FILE" \
             "http://${{ secrets.TOMCAT_USER }}:${{ secrets.TOMCAT_PASSWORD }}@${{ secrets.TOMCAT_HOST }}/manager/text/deploy?path=/myapp&update=true"
-      # 9. Optional: verify deployment
+
+      # 11. Optional: verify deployment
       - name: Verify deployment
         run: |
           curl -I http://${{ secrets.TOMCAT_HOST }}/myapp
